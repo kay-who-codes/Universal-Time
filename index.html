@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Time World Clock</title>
+    <title>🌍 Universal Time</title>
     <style>
         * {
             margin: 0;
@@ -133,7 +133,6 @@
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         transition: all 0.4s ease;
-        position: relative;
         overflow: hidden;
         color: #ffffff !important;
     }
@@ -173,7 +172,7 @@
         font-size: 1.2rem;
         font-weight: 500 !important;
         margin-bottom: 15px;
-        color: #64b5f6 !important;
+        color: #92d7ff !important;
     }
 
     .utc-card .location {
@@ -207,8 +206,9 @@
 
     .offset {
         font-size: 0.9rem;
-        color: rgba(255, 255, 255, 0.5) !important;
+        color: #92d7ff !important;
         margin-top: 5px;
+        font-weight: 700;
     }
 
     @media (max-width: 768px) {
@@ -250,8 +250,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 class="title">Universal Time World Clock</h1>
-
+            <h1 class="title">Universal Times</h1>
+        </div>
 
         <div class="mode-selector">
             <button class="mode-btn active" onclick="setMode('current')">Current Time</button>
@@ -261,157 +261,182 @@
         <div class="time-input-container" id="timeInputContainer">
             <input type="datetime-local" class="time-input" id="customTime" onchange="updateCustomTime()">
         </div>
+
+        <div class="time-zones" id="timeZones">
+            <!-- Time zones will be populated by JavaScript -->
+        </div>
     </div>
 
-    <div class="time-zones" id="timeZones">
-        <!-- Time zones will be populated by JavaScript -->
-    </div>
-</div>
+    <script>
+        let currentMode = 'current';
+        let customDateTime = null;
+        let updateInterval;
 
-<script>
-    let currentMode = 'current';
-    let customDateTime = null;
-    let updateInterval;
+        const timeZones = [
+            // Before UTC (up to 12 hours behind)
+            { name: '🇺🇸 Texas', timezone: 'America/Chicago', symbol: 'CST' },
+            
+            // UTC prominently displayed in the middle
+            { name: '🌍 Universal Time', timezone: 'UTC', symbol: 'UTC', isUTC: true },
+            
+            // After UTC (up to 12 hours ahead)
+            { name: '🇬🇧 United Kingdom', timezone: 'Europe/London', symbol: 'GMT' },
+            { name: '🇵🇹 Portugal', timezone: 'Europe/Lisbon', symbol: 'WET' },
+            { name: '🇪🇸 Spain', timezone: 'Europe/Madrid', symbol: 'CET' },
+            { name: '🇸🇰 Slovakia', timezone: 'Europe/Bratislava', symbol: 'CET' },
+            { name: '🇪🇪 Estonia', timezone: 'Europe/Tallinn', symbol: 'EET' },
+            { name: '🇷🇺 Russia Moscow', timezone: 'Europe/Moscow', symbol: 'MSK' },
+            { name: '🇨🇳 China', timezone: 'Asia/Shanghai', symbol: 'CST' }
+        ];
 
-    const timeZones = [
-        // Before UTC (up to 12 hours behind)
-        { name: '🇺🇸 Texas (CST/CDT)', timezone: 'America/Chicago', offset: 'UTC-6/-5' },
-        
-        // UTC prominently displayed in the middle
-        { name: '🌍 Universal Time (UTC)', timezone: 'UTC', offset: 'UTC+0', isUTC: true },
-        
-        // After UTC (up to 12 hours ahead)
-        { name: '🇬🇧 United Kingdom (GMT/BST)', timezone: 'Europe/London', offset: 'UTC+0/+1' },
-        { name: '🇵🇹 Portugal (WET/WEST)', timezone: 'Europe/Lisbon', offset: 'UTC+0/+1' },
-        { name: '🇪🇸 Spain (CET/CEST)', timezone: 'Europe/Madrid', offset: 'UTC+1/+2' },
-        { name: '🇸🇰 Slovakia (CET/CEST)', timezone: 'Europe/Bratislava', offset: 'UTC+1/+2' },
-        { name: '🇪🇪 Estonia (EEST/DST)', timezone: 'Europe/Tallinn', offset: 'UTC+2/+3' },
-        { name: '🇨🇳 China (CST)', timezone: 'Asia/Shanghai', offset: 'UTC+8' },
-        { name: '🇷🇺 Russia Moscow (MSK)', timezone: 'Europe/Moscow', offset: 'UTC+3' }
-    ];
-
-    function setMode(mode) {
-        currentMode = mode;
-        
-        // Update button states
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        event.target.classList.add('active');
-        
-        // Show/hide time input
-        const timeInputContainer = document.getElementById('timeInputContainer');
-        if (mode === 'custom') {
-            timeInputContainer.classList.add('active');
-            if (!document.getElementById('customTime').value) {
-                const now = new Date();
-                const localISOTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-                document.getElementById('customTime').value = localISOTime;
-                updateCustomTime();
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Update button states
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide time input
+            const timeInputContainer = document.getElementById('timeInputContainer');
+            if (mode === 'custom') {
+                timeInputContainer.classList.add('active');
+                if (!document.getElementById('customTime').value) {
+                    const now = new Date();
+                    const localISOTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    document.getElementById('customTime').value = localISOTime;
+                    updateCustomTime();
+                }
+            } else {
+                timeInputContainer.classList.remove('active');
+                customDateTime = null;
             }
-        } else {
-            timeInputContainer.classList.remove('active');
-            customDateTime = null;
-        }
-        
-        updateAllTimes();
-    }
-
-    function updateCustomTime() {
-        const input = document.getElementById('customTime');
-        if (input.value) {
-            customDateTime = new Date(input.value);
+            
             updateAllTimes();
         }
-    }
 
-    function getCurrentTime() {
-        return currentMode === 'current' ? new Date() : (customDateTime || new Date());
-    }
-
-    function formatTime(date, timezone) {
-        const options = {
-            timeZone: timezone === 'UTC' ? 'UTC' : timezone,
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        };
-        return date.toLocaleTimeString('en-US', options);
-    }
-
-    function formatDate(date, timezone) {
-        const options = {
-            timeZone: timezone === 'UTC' ? 'UTC' : timezone,
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        };
-        return date.toLocaleDateString('en-US', options);
-    }
-
-    function createTimeCard(zone) {
-        const currentTime = getCurrentTime();
-        const time = formatTime(currentTime, zone.timezone);
-        const date = formatDate(currentTime, zone.timezone);
-        
-        const cardClass = zone.isUTC ? 'time-card utc-card' : 'time-card';
-        const pulseClass = currentMode === 'current' ? 'pulse' : '';
-        
-        return `
-            <div class="${cardClass}">
-                <div class="location">${zone.name}</div>
-                <div class="time ${pulseClass}">${time}</div>
-                <div class="date">${date}</div>
-                <div class="offset">${zone.offset}</div>
-            </div>
-        `;
-    }
-
-    function updateAllTimes() {
-        const container = document.getElementById('timeZones');
-        let html = '';
-        
-        // Find UTC index
-        const utcIndex = timeZones.findIndex(zone => zone.isUTC);
-        
-        // Add zones before UTC
-        for (let i = 0; i < utcIndex; i++) {
-            html += createTimeCard(timeZones[i]);
+        function updateCustomTime() {
+            const input = document.getElementById('customTime');
+            if (input.value) {
+                customDateTime = new Date(input.value);
+                updateAllTimes();
+            }
         }
-        
-        // Add UTC section
-        html += '<div class="utc-section">';
-        html += createTimeCard(timeZones[utcIndex]);
-        html += '</div>';
-        
-        // Add zones after UTC
-        for (let i = utcIndex + 1; i < timeZones.length; i++) {
-            html += createTimeCard(timeZones[i]);
-        }
-        
-        container.innerHTML = html;
-    }
 
-    function startClock() {
-        if (updateInterval) {
-            clearInterval(updateInterval);
+        function getCurrentTime() {
+            return currentMode === 'current' ? new Date() : (customDateTime || new Date());
         }
-        
-        if (currentMode === 'current') {
-            updateInterval = setInterval(updateAllTimes, 1000);
-        }
-        updateAllTimes();
-    }
 
-    // Initialize the clock
-    startClock();
-    
-    // Update clock when mode changes
-    document.addEventListener('DOMContentLoaded', () => {
+        function formatTime(date, timezone) {
+            const options = {
+                timeZone: timezone === 'UTC' ? 'UTC' : timezone,
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            return date.toLocaleTimeString('en-US', options);
+        }
+
+        function formatDate(date, timezone) {
+            const options = {
+                timeZone: timezone === 'UTC' ? 'UTC' : timezone,
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function getUTCOffset(date, timezone) {
+            if (timezone === 'UTC') {
+                return 'UTC+0';
+            }
+            
+            // Create dates in UTC and target timezone
+            const utcTime = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+            const localTime = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+            
+            // Calculate offset in minutes
+            const offsetMinutes = (localTime.getTime() - utcTime.getTime()) / (1000 * 60);
+            const offsetHours = offsetMinutes / 60;
+            
+            // Format offset
+            const sign = offsetHours >= 0 ? '+' : '';
+            const hours = Math.floor(Math.abs(offsetHours));
+            const minutes = Math.abs(offsetMinutes) % 60;
+            
+            if (minutes === 0) {
+                return `UTC${sign}${offsetHours}`;
+            } else {
+                return `UTC${sign}${hours}:${minutes.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function createTimeCard(zone) {
+            const currentTime = getCurrentTime();
+            const time = formatTime(currentTime, zone.timezone);
+            const date = formatDate(currentTime, zone.timezone);
+            const offset = getUTCOffset(currentTime, zone.timezone);
+            
+            const cardClass = zone.isUTC ? 'time-card utc-card' : 'time-card';
+            const pulseClass = currentMode === 'current' ? 'pulse' : '';
+            
+            return `
+                <div class="${cardClass}">
+                    <div class="location">${zone.name} (${zone.symbol})</div>
+                    <div class="time ${pulseClass}">${time}</div>
+                    <div class="date">${date}</div>
+                    <div class="offset">${offset}</div>
+                </div>
+            `;
+        }
+
+        function updateAllTimes() {
+            const container = document.getElementById('timeZones');
+            let html = '';
+            
+            // Find UTC index
+            const utcIndex = timeZones.findIndex(zone => zone.isUTC);
+            
+            // Add zones before UTC
+            for (let i = 0; i < utcIndex; i++) {
+                html += createTimeCard(timeZones[i]);
+            }
+            
+            // Add UTC section
+            html += '<div class="utc-section">';
+            html += createTimeCard(timeZones[utcIndex]);
+            html += '</div>';
+            
+            // Add zones after UTC
+            for (let i = utcIndex + 1; i < timeZones.length; i++) {
+                html += createTimeCard(timeZones[i]);
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function startClock() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+            
+            if (currentMode === 'current') {
+                updateInterval = setInterval(updateAllTimes, 1000);
+            }
+            updateAllTimes();
+        }
+
+        // Initialize the clock
         startClock();
-    });
-</script>
+        
+        // Update clock when mode changes
+        document.addEventListener('DOMContentLoaded', () => {
+            startClock();
+        });
+    </script>
 </body>
 </html>
