@@ -11,8 +11,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
-```
     body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
         background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%) !important;
@@ -246,7 +244,7 @@
         100% { opacity: 1; }
     }
 </style>
-```
+
 
 </head>
 <body>
@@ -254,7 +252,7 @@
         <div class="header">
             <h1 class="title">Universal Time World Clock</h1>
 
-```
+
         <div class="mode-selector">
             <button class="mode-btn active" onclick="setMode('current')">Current Time</button>
             <button class="mode-btn" onclick="setMode('custom')">Specific Time</button>
@@ -285,6 +283,7 @@
         // After UTC (up to 12 hours ahead)
         { name: '🇬🇧 United Kingdom (GMT/BST)', timezone: 'Europe/London', offset: 'UTC+0/+1' },
         { name: '🇵🇹 Portugal (WET/WEST)', timezone: 'Europe/Lisbon', offset: 'UTC+0/+1' },
+        { name: '🇪🇪 Estonia (EEST/DST)', timezone: 'Europe/Tallinn', offset: 'UTC+1/+2' },
         { name: '🇪🇸 Spain (CET/CEST)', timezone: 'Europe/Madrid', offset: 'UTC+1/+2' },
         { name: '🇸🇰 Slovakia (CET/CEST)', timezone: 'Europe/Bratislava', offset: 'UTC+1/+2' },
         { name: '🇨🇳 China (CST)', timezone: 'Asia/Shanghai', offset: 'UTC+8' },
@@ -414,7 +413,5 @@
         startClock();
     });
 </script>
-```
-
 </body>
 </html>
